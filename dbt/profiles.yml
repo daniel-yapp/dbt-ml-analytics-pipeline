@@ -5,12 +5,12 @@ ecommerce_analytics:
   outputs:
     dev:
       type: duckdb
-      path: '../ecommerce_raw.duckdb'
-      schema: analytics
+      path: 'ecommerce.duckdb'
+      schema: main
       threads: 4
 
     prod:
       type: duckdb
-      path: '../ecommerce_prod.duckdb'
-      schema: analytics
+      path: 'ecommerce_prod.duckdb'
+      schema: main
       threads: 8

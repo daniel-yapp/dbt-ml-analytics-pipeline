@@ -3,7 +3,6 @@ version: 2
 sources:
   - name: raw
     description: Raw e-commerce data loaded from Olist Brazilian E-Commerce dataset (Kaggle)
-    database: main
     schema: raw
     tables:
       - name: olist_customers_dataset

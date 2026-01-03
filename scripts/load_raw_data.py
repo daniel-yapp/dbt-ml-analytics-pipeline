@@ -9,7 +9,7 @@ def load_raw_data():
 
     project_root = Path(__file__).parent.parent
     raw_data_dir = project_root / "data" / "raw"
-    db_path = project_root / "ecommerce_raw.duckdb"
+    db_path = project_root / "ecommerce.duckdb"
 
     # Check for CSV files
     csv_files = list(raw_data_dir.glob("*.csv"))
@@ -32,10 +32,10 @@ def load_raw_data():
         """)
 
         row_count = con.execute(f"SELECT COUNT(*) FROM raw.{table_name}").fetchone()[0]
-        print(f"✓ {table_name}: {row_count:,} rows")
+        print(f"[OK] {table_name}: {row_count:,} rows")
 
     con.close()
-    print(f"\n✅ Complete! Database: {db_path}")
+    print(f"\nComplete! Database: {db_path}")
 
 
 if __name__ == "__main__":

@@ -55,7 +55,7 @@ snapshots:
     +target_schema: snapshots
 
 # Testing
-tests:
+data_tests:
   ecommerce_analytics:
     +store_failures: true
     +schema: test_results

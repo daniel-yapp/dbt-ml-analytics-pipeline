@@ -53,6 +53,7 @@ dbt_packages/
 logs/
 target/
 dbt_modules/
+.user.yml
 
 # IDE
 .vscode/

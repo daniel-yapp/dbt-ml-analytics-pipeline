@@ -24,7 +24,7 @@ final as (
         c.customer_unique_id as customer_key,
         oi.product_id as product_key,
         oi.seller_id as seller_key,
-        date(o.purchased_at) as order_date_key,  -- For date dimension join
+        o.purchased_at::date as order_date_key,  -- For date dimension join
 
         -- Item details
         oi.order_item_id as item_sequence,

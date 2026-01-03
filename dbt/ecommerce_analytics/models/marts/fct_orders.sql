@@ -49,7 +49,7 @@ payment_totals as (
     group by order_id
 ),
 
--- Get review scores
+-- Get review scores (latest review per order)
 review_scores as (
     select
         order_id,
@@ -57,6 +57,7 @@ review_scores as (
         sentiment,
         has_comment
     from reviews
+    qualify row_number() over (partition by order_id order by created_at desc) = 1
 ),
 
 final as (
@@ -66,7 +67,7 @@ final as (
 
         -- Foreign keys (dimension references)
         c.customer_unique_id as customer_key,
-        date(o.purchased_at) as order_date_key,  -- For date dimension join
+        o.purchased_at::date as order_date_key,  -- For date dimension join
 
         -- Order details
         o.order_status,
