@@ -1,0 +1,16 @@
+# profiles.yml - DuckDB connection configuration for dbt
+
+ecommerce_analytics:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: '../ecommerce_raw.duckdb'
+      schema: analytics
+      threads: 4
+
+    prod:
+      type: duckdb
+      path: '../ecommerce_prod.duckdb'
+      schema: analytics
+      threads: 8

@@ -27,3 +27,6 @@ sqlfluff>=3.5.0
 # python-dotenv>=1.2.1 # Uncomment if environment variable management is needed. Will decide later.
 # pyyaml>=6.0.3 # Uncomment if YAML file handling is needed. Will decide later.
 requests>=2.32.5
+
+# translation
+deep-translator>=1.11.4

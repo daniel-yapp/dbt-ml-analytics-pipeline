@@ -1,0 +1,94 @@
+version: 2
+
+models:
+  - name: int_customer_orders
+    description: Customer order aggregations with financial and review metrics
+    columns:
+      - name: customer_unique_id
+        description: Unique customer identifier
+        tests:
+          - unique
+          - not_null
+
+      - name: total_orders
+        description: Total number of orders placed by customer
+        tests:
+          - not_null
+
+      - name: total_revenue
+        description: Total revenue from delivered orders (R$)
+        tests:
+          - not_null
+
+  - name: int_rfm_scores
+    description: RFM (Recency, Frequency, Monetary) customer segmentation
+    columns:
+      - name: customer_unique_id
+        description: Unique customer identifier
+        tests:
+          - unique
+          - not_null
+
+      - name: recency_score
+        description: Score 1-5, where 5 = most recent purchase
+        tests:
+          - not_null
+          - accepted_values:
+              values: [1, 2, 3, 4, 5]
+
+      - name: frequency_score
+        description: Score 1-5, where 5 = most frequent buyer
+        tests:
+          - not_null
+          - accepted_values:
+              values: [1, 2, 3, 4, 5]
+
+      - name: monetary_score
+        description: Score 1-5, where 5 = highest spending
+        tests:
+          - not_null
+          - accepted_values:
+              values: [1, 2, 3, 4, 5]
+
+      - name: customer_segment
+        description: Customer segment based on RFM scores
+        tests:
+          - not_null
+          - accepted_values:
+              values:
+                - 'Champions'
+                - 'Loyal Customers'
+                - 'Potential Loyalists'
+                - 'Recent Customers'
+                - 'Promising'
+                - 'Need Attention'
+                - 'At Risk'
+                - 'Cannot Lose Them'
+                - 'Hibernating'
+                - 'Lost'
+
+  - name: int_product_performance
+    description: Product performance metrics including sales, revenue, and reviews
+    columns:
+      - name: product_id
+        description: Unique product identifier
+        tests:
+          - unique
+          - not_null
+
+      - name: category_english
+        description: Product category in English
+        tests:
+          - not_null
+
+  - name: int_seller_performance
+    description: Seller performance metrics including sales, delivery, and reviews
+    columns:
+      - name: seller_id
+        description: Unique seller identifier
+        tests:
+          - unique
+          - not_null
+
+      - name: on_time_delivery_pct
+        description: Percentage of on-time deliveries

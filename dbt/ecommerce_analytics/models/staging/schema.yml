@@ -1,0 +1,119 @@
+version: 2
+
+sources:
+  - name: raw
+    description: Raw e-commerce data loaded from Olist Brazilian E-Commerce dataset (Kaggle)
+    database: main
+    schema: raw
+    tables:
+      - name: olist_customers_dataset
+        description: Customer demographic and location data
+        columns:
+          - name: customer_id
+            description: Unique identifier for the customer (one per order)
+            tests:
+              - unique
+              - not_null
+
+          - name: customer_unique_id
+            description: Unique identifier for actual person (may have multiple customer_ids)
+            tests:
+              - not_null
+
+          - name: customer_zip_code_prefix
+            description: First 5 digits of customer zip code
+            tests:
+              - not_null
+
+          - name: customer_city
+            description: Customer city name (Portuguese)
+
+          - name: customer_state
+            description: Customer state (2-letter Brazilian state code)
+            tests:
+              - not_null
+
+      - name: olist_orders_dataset
+        description: Core order transactions and status tracking
+        columns:
+          - name: order_id
+            description: Unique order identifier
+            tests:
+              - unique
+              - not_null
+
+          - name: customer_id
+            description: Customer who placed the order
+            tests:
+              - not_null
+              - relationships:
+                  to: source('raw', 'olist_customers_dataset')
+                  field: customer_id
+
+          - name: order_status
+            description: Current status of the order
+            tests:
+              - not_null
+              - accepted_values:
+                  values: ['delivered', 'shipped', 'canceled', 'unavailable', 'invoiced', 'processing', 'created', 'approved']
+
+          - name: order_purchase_timestamp
+            description: Timestamp when order was placed
+            tests:
+              - not_null
+
+      - name: olist_order_items_dataset
+        description: Line items within each order
+        columns:
+          - name: order_id
+            description: Order this item belongs to
+            tests:
+              - not_null
+              - relationships:
+                  to: source('raw', 'olist_orders_dataset')
+                  field: order_id
+
+          - name: order_item_id
+            description: Sequential item number within order
+            tests:
+              - not_null
+
+          - name: product_id
+            description: Product purchased
+            tests:
+              - not_null
+
+          - name: seller_id
+            description: Seller who fulfilled this item
+            tests:
+              - not_null
+
+      - name: olist_order_payments_dataset
+        description: Payment transactions for orders
+
+      - name: olist_order_reviews_dataset
+        description: Customer satisfaction reviews
+
+      - name: olist_products_dataset
+        description: Product catalog and attributes
+        columns:
+          - name: product_id
+            description: Unique product identifier
+            tests:
+              - unique
+              - not_null
+
+      - name: olist_sellers_dataset
+        description: Seller/merchant information
+        columns:
+          - name: seller_id
+            description: Unique seller identifier
+            tests:
+              - unique
+              - not_null
+
+      - name: olist_geolocation_dataset
+        description: Brazilian zip code to lat/long mapping
+
+      - name: product_category_name_translation
+        description: Portuguese to English translation for product categories
