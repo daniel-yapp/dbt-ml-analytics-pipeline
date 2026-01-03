@@ -39,7 +39,7 @@ models:
 
     # Mart models - final analytics-ready tables
     marts:
-      +materialized: table
+      +materialized: view # DBT recommends using 'view' by default unless query time is long, then use 'table'
       +schema: marts
       +docs:
         node_color: "#50C878"  # Green
