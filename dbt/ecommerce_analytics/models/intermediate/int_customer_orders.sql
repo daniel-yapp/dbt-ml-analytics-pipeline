@@ -84,11 +84,11 @@ order_enriched as (
         r.sentiment,
         r.has_comment
 
-    from orders o
-    left join customers c on o.customer_id = c.customer_id
-    left join order_totals ot on o.order_id = ot.order_id
-    left join payment_totals pt on o.order_id = pt.order_id
-    left join review_scores r on o.order_id = r.order_id
+    from orders as o
+    left join customers as c on o.customer_id = c.customer_id
+    left join order_totals as ot on o.order_id = ot.order_id
+    left join payment_totals as pt on o.order_id = pt.order_id
+    left join review_scores as r on o.order_id = r.order_id
 ),
 
 -- Aggregate to customer level (using customer_unique_id)
@@ -98,17 +98,25 @@ customer_aggregates as (
 
         -- Order metrics
         count(distinct order_id) as total_orders,
-        count(distinct case when order_status = 'delivered' then order_id end) as delivered_orders,
-        count(distinct case when order_status = 'canceled' then order_id end) as canceled_orders,
+        count(distinct case when order_status = 'delivered' then order_id end)
+            as delivered_orders,
+        count(distinct case when order_status = 'canceled' then order_id end)
+            as canceled_orders,
 
         -- Financial metrics (only delivered orders)
-        sum(case when order_status = 'delivered' then order_value else 0 end) as total_revenue,
-        avg(case when order_status = 'delivered' then order_value end) as avg_order_value,
-        max(case when order_status = 'delivered' then order_value end) as max_order_value,
-        sum(case when order_status = 'delivered' then freight_value else 0 end) as total_freight_paid,
+        sum(case when order_status = 'delivered' then order_value else 0 end)
+            as total_revenue,
+        avg(case when order_status = 'delivered' then order_value end)
+            as avg_order_value,
+        max(case when order_status = 'delivered' then order_value end)
+            as max_order_value,
+        sum(
+            case when order_status = 'delivered' then freight_value else 0 end
+        ) as total_freight_paid,
 
         -- Delivery performance
-        avg(case when order_status = 'delivered' then delivery_delay_days end) as avg_delivery_delay_days,
+        avg(case when order_status = 'delivered' then delivery_delay_days end)
+            as avg_delivery_delay_days,
         count(case when is_late_delivery = true then 1 end) as late_deliveries,
 
         -- Review metrics
@@ -117,7 +125,8 @@ customer_aggregates as (
         count(case when review_score >= 4 then 1 end) as positive_reviews,
 
         -- Recency (days since last order)
-        datediff('day', max(purchased_at)::date, '2018-08-31'::date) as days_since_last_order,
+        datediff('day', max(purchased_at)::date, '2018-08-31'::date)
+            as days_since_last_order,
 
         -- Dates
         min(purchased_at) as first_order_date,

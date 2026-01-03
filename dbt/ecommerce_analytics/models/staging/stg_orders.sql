@@ -27,18 +27,22 @@ cleaned as (
 
         -- Calculated fields
         case
-            when order_delivered_customer_date is not null
-                 and order_estimated_delivery_date is not null
-            then datediff('day', order_estimated_delivery_date, order_delivered_customer_date::date)
-            else null
+            when
+                order_delivered_customer_date is not null
+                and order_estimated_delivery_date is not null
+                then
+                    datediff(
+                        'day',
+                        order_estimated_delivery_date,
+                        order_delivered_customer_date::date
+                    )
         end as delivery_delay_days,
 
-        case
-            when order_delivered_customer_date is not null
-                 and order_delivered_customer_date::date > order_estimated_delivery_date
-            then true
-            else false
-        end as is_late_delivery
+        coalesce(
+            order_delivered_customer_date is not null
+            and order_delivered_customer_date::date
+            > order_estimated_delivery_date, false
+        ) as is_late_delivery
 
     from source
 )

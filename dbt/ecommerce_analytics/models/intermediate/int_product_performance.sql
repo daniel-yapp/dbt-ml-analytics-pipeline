@@ -23,8 +23,8 @@ delivered_items as (
         oi.*,
         o.purchased_at,
         o.customer_delivered_at
-    from order_items oi
-    inner join orders o on oi.order_id = o.order_id
+    from order_items as oi
+    inner join orders as o on oi.order_id = o.order_id
     where o.order_status = 'delivered'
 ),
 
@@ -51,9 +51,11 @@ product_metrics as (
         -- Time metrics
         min(di.shipping_limit_date) as first_sale_date,
         max(di.shipping_limit_date) as last_sale_date,
-        datediff('day', min(di.shipping_limit_date), max(di.shipping_limit_date)) as days_on_market
+        datediff(
+            'day', min(di.shipping_limit_date), max(di.shipping_limit_date)
+        ) as days_on_market
 
-    from delivered_items di
+    from delivered_items as di
     group by di.product_id
 ),
 
@@ -65,8 +67,8 @@ product_reviews as (
         count(*) as review_count,
         count(case when r.review_score >= 4 then 1 end) as positive_reviews,
         count(case when r.review_score <= 2 then 1 end) as negative_reviews
-    from reviews r
-    inner join order_items oi on r.order_id = oi.order_id
+    from reviews as r
+    inner join order_items as oi on r.order_id = oi.order_id
     group by oi.product_id
 ),
 
@@ -113,9 +115,9 @@ final as (
             else 'No Reviews'
         end as review_tier
 
-    from products p
-    left join product_metrics pm on p.product_id = pm.product_id
-    left join product_reviews pr on p.product_id = pr.product_id
+    from products as p
+    left join product_metrics as pm on p.product_id = pm.product_id
+    left join product_reviews as pr on p.product_id = pr.product_id
 )
 
 select * from final

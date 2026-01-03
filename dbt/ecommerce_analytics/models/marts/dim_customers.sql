@@ -68,17 +68,24 @@ final as (
         co.days_since_last_order,
 
         -- Flags
-        case when co.total_orders = 1 then true else false end as is_one_time_buyer,
-        case when co.canceled_orders > 0 then true else false end as has_cancellations,
-        case when co.negative_reviews > 0 then true else false end as has_negative_reviews,
+        coalesce(co.total_orders = 1, false)
+            as is_one_time_buyer,
+        coalesce(co.canceled_orders > 0, false)
+            as has_cancellations,
+        coalesce(co.negative_reviews > 0, false)
+            as has_negative_reviews,
 
         -- Metadata
         current_timestamp as created_at
 
-    from latest_customers lc
-    inner join customers c on lc.latest_customer_id = c.customer_id
-    left join customer_orders co on lc.customer_unique_id = co.customer_unique_id
-    left join rfm_scores rfm on lc.customer_unique_id = rfm.customer_unique_id
+    from latest_customers as lc
+    inner join customers as c on lc.latest_customer_id = c.customer_id
+    left join
+        customer_orders as co
+        on lc.customer_unique_id = co.customer_unique_id
+    left join
+        rfm_scores as rfm
+        on lc.customer_unique_id = rfm.customer_unique_id
 )
 
 select * from final

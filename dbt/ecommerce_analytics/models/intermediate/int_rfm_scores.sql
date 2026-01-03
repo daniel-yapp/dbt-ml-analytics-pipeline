@@ -38,47 +38,62 @@ rfm_segmented as (
         (recency_score + frequency_score + monetary_score) as rfm_score,
 
         -- RFM string (e.g., "555" for champions)
-        cast(recency_score as varchar) ||
-        cast(frequency_score as varchar) ||
-        cast(monetary_score as varchar) as rfm_string,
+        cast(recency_score as varchar)
+        || cast(frequency_score as varchar)
+        || cast(monetary_score as varchar) as rfm_string,
 
         -- Customer segments based on RFM scores
         case
             -- Champions: Best customers (recent, frequent, high value)
-            when recency_score >= 4 and frequency_score >= 4 and monetary_score >= 4
-            then 'Champions'
+            when
+                recency_score >= 4
+                and frequency_score >= 4
+                and monetary_score >= 4
+                then 'Champions'
 
             -- Loyal Customers: Frequent buyers
             when frequency_score >= 4 and monetary_score >= 4
-            then 'Loyal Customers'
+                then 'Loyal Customers'
 
             -- Potential Loyalists: Recent customers with potential
-            when recency_score >= 4 and frequency_score >= 2 and monetary_score >= 2
-            then 'Potential Loyalists'
+            when
+                recency_score >= 4
+                and frequency_score >= 2
+                and monetary_score >= 2
+                then 'Potential Loyalists'
 
             -- Recent Customers: Just bought
             when recency_score >= 4
-            then 'Recent Customers'
+                then 'Recent Customers'
 
             -- Promising: Recent, spent decent amount
             when recency_score >= 3 and monetary_score >= 3
-            then 'Promising'
+                then 'Promising'
 
             -- Need Attention: Above average but not recent
-            when recency_score >= 2 and frequency_score >= 2 and monetary_score >= 2
-            then 'Need Attention'
+            when
+                recency_score >= 2
+                and frequency_score >= 2
+                and monetary_score >= 2
+                then 'Need Attention'
 
             -- At Risk: Used to be good customers, but haven't purchased recently
-            when recency_score <= 2 and frequency_score >= 3 and monetary_score >= 3
-            then 'At Risk'
+            when
+                recency_score <= 2
+                and frequency_score >= 3
+                and monetary_score >= 3
+                then 'At Risk'
 
             -- Can't Lose Them: High value, but not recent
-            when recency_score <= 2 and frequency_score >= 4 and monetary_score >= 4
-            then 'Cannot Lose Them'
+            when
+                recency_score <= 2
+                and frequency_score >= 4
+                and monetary_score >= 4
+                then 'Cannot Lose Them'
 
             -- Hibernating: Low recency, used to buy
             when recency_score <= 2 and frequency_score >= 2
-            then 'Hibernating'
+                then 'Hibernating'
 
             -- Lost: Lowest scores
             else 'Lost'
@@ -86,8 +101,12 @@ rfm_segmented as (
 
         -- Simplified tier
         case
-            when (recency_score + frequency_score + monetary_score) >= 12 then 'High Value'
-            when (recency_score + frequency_score + monetary_score) >= 8 then 'Medium Value'
+            when
+                (recency_score + frequency_score + monetary_score) >= 12
+                then 'High Value'
+            when
+                (recency_score + frequency_score + monetary_score) >= 8
+                then 'Medium Value'
             else 'Low Value'
         end as customer_tier
 

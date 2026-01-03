@@ -25,12 +25,10 @@ cleaned as (
         review_answer_timestamp as answered_at,
 
         -- Derived fields
-        case
-            when review_comment_message is not null
-                 and length(trim(review_comment_message)) > 0
-            then true
-            else false
-        end as has_comment,
+        coalesce(
+            review_comment_message is not null
+            and length(trim(review_comment_message)) > 0, false
+        ) as has_comment,
 
         case
             when review_score >= 4 then 'Positive'

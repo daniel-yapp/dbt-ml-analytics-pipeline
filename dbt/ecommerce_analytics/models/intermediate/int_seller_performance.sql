@@ -27,8 +27,8 @@ delivered_items as (
         o.carrier_delivered_at,
         o.is_late_delivery,
         o.delivery_delay_days
-    from order_items oi
-    inner join orders o on oi.order_id = o.order_id
+    from order_items as oi
+    inner join orders as o on oi.order_id = o.order_id
     where o.order_status = 'delivered'
 ),
 
@@ -49,7 +49,8 @@ seller_metrics as (
         -- Delivery performance
         avg(delivery_delay_days) as avg_delivery_delay_days,
         count(case when is_late_delivery = true then 1 end) as late_deliveries,
-        count(case when is_late_delivery = false then 1 end) as on_time_deliveries,
+        count(case when is_late_delivery = false then 1 end)
+            as on_time_deliveries,
 
         -- Time metrics
         min(purchased_at) as first_sale_date,
@@ -68,8 +69,8 @@ seller_reviews as (
         count(*) as review_count,
         count(case when r.review_score >= 4 then 1 end) as positive_reviews,
         count(case when r.review_score <= 2 then 1 end) as negative_reviews
-    from reviews r
-    inner join order_items oi on r.order_id = oi.order_id
+    from reviews as r
+    inner join order_items as oi on r.order_id = oi.order_id
     group by oi.seller_id
 ),
 
@@ -81,26 +82,26 @@ final as (
         s.state,
 
         -- Sales metrics
+        sm.days_active,
+        sm.avg_delivery_delay_days,
+        sr.avg_review_score,
         coalesce(sm.total_orders, 0) as total_orders,
         coalesce(sm.total_items_sold, 0) as total_items_sold,
         coalesce(sm.total_revenue, 0) as total_revenue,
-        coalesce(sm.avg_item_price, 0) as avg_item_price,
-        coalesce(sm.unique_products, 0) as unique_products,
-        sm.days_active,
 
         -- Delivery metrics
-        sm.avg_delivery_delay_days,
+        coalesce(sm.avg_item_price, 0) as avg_item_price,
+        coalesce(sm.unique_products, 0) as unique_products,
         coalesce(sm.late_deliveries, 0) as late_deliveries,
         coalesce(sm.on_time_deliveries, 0) as on_time_deliveries,
+
+        -- Review metrics
         case
             when sm.late_deliveries + sm.on_time_deliveries > 0
             then round(100.0 * sm.on_time_deliveries /
                  (sm.late_deliveries + sm.on_time_deliveries), 2)
             else null
         end as on_time_delivery_pct,
-
-        -- Review metrics
-        sr.avg_review_score,
         coalesce(sr.review_count, 0) as review_count,
         coalesce(sr.positive_reviews, 0) as positive_reviews,
         coalesce(sr.negative_reviews, 0) as negative_reviews,
@@ -122,9 +123,9 @@ final as (
             else 'No Reviews'
         end as review_tier
 
-    from sellers s
-    left join seller_metrics sm on s.seller_id = sm.seller_id
-    left join seller_reviews sr on s.seller_id = sr.seller_id
+    from sellers as s
+    left join seller_metrics as sm on s.seller_id = sm.seller_id
+    left join seller_reviews as sr on s.seller_id = sr.seller_id
 )
 
 select * from final

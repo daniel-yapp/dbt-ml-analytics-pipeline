@@ -57,7 +57,8 @@ review_scores as (
         sentiment,
         has_comment
     from reviews
-    qualify row_number() over (partition by order_id order by created_at desc) = 1
+    qualify
+        row_number() over (partition by order_id order by created_at desc) = 1
 ),
 
 final as (
@@ -78,41 +79,48 @@ final as (
         o.estimated_delivery_date,
 
         -- Calculated delivery metrics
-        datediff('day', o.purchased_at::date, o.carrier_delivered_at::date) as days_to_carrier,
-        datediff('day', o.carrier_delivered_at::date, o.customer_delivered_at::date) as days_in_transit,
-        datediff('day', o.purchased_at::date, o.customer_delivered_at::date) as days_to_customer,
         o.delivery_delay_days,
         o.is_late_delivery,
+        pt.primary_payment_type,
+        r.review_score,
+        r.sentiment,
 
         -- Financial metrics
+        r.has_comment,
+        c.state as customer_state,
+        c.city as customer_city,
+        datediff('day', o.purchased_at::date, o.carrier_delivered_at::date)
+            as days_to_carrier,
+
+        -- Payment details
+        datediff(
+            'day', o.carrier_delivered_at::date, o.customer_delivered_at::date
+        ) as days_in_transit,
+        datediff('day', o.purchased_at::date, o.customer_delivered_at::date)
+            as days_to_customer,
         coalesce(ot.order_value, 0) as order_value,
+
+        -- Order composition
         coalesce(ot.items_value, 0) as items_value,
         coalesce(ot.freight_value, 0) as freight_value,
         coalesce(pt.total_paid, 0) as total_paid,
 
-        -- Payment details
+        -- Review metrics
         coalesce(pt.payment_count, 0) as payment_count,
         coalesce(pt.max_installments, 1) as max_installments,
-        pt.primary_payment_type,
-
-        -- Order composition
         coalesce(ot.items_count, 0) as items_count,
+
+        -- Customer location
         coalesce(ot.unique_products, 0) as unique_products,
         coalesce(ot.unique_sellers, 0) as unique_sellers,
 
-        -- Review metrics
-        r.review_score,
-        r.sentiment,
-        r.has_comment,
-
-        -- Customer location
-        c.state as customer_state,
-        c.city as customer_city,
-
         -- Flags
-        case when o.order_status = 'delivered' then true else false end as is_delivered,
-        case when o.order_status = 'canceled' then true else false end as is_canceled,
-        case when ot.unique_sellers > 1 then true else false end as is_multi_seller,
+        coalesce(o.order_status = 'delivered', false)
+            as is_delivered,
+        coalesce(o.order_status = 'canceled', false)
+            as is_canceled,
+        coalesce(ot.unique_sellers > 1, false)
+            as is_multi_seller,
 
         -- Metadata
         current_timestamp as created_at
