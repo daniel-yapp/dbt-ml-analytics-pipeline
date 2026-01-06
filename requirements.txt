@@ -13,6 +13,7 @@ optuna>=4.6.0
 # Visualization
 streamlit>=1.52.0
 plotly>=6.5.0
+graphviz>=0.20.0  # For data lineage visualization
 matplotlib>=3.10.8
 seaborn>=0.13.2
 
@@ -26,9 +27,8 @@ sqlfluff>=3.5.0
 
 # Utilities
 # python-dotenv>=1.2.1 # Uncomment if environment variable management is needed. Will decide later.
-# pyyaml>=6.0.3 # Uncomment if YAML file handling is needed. Will decide later.
 requests>=2.32.5
 sqlparse>=0.5.0
 
-# translation
-deep-translator>=1.11.4
+# Data Download
+kaggle>=1.6.0  # Kaggle API for dataset download

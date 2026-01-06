@@ -35,6 +35,9 @@ env/
 *.duckdb
 *.duckdb.wal
 
+# EXCEPT: Allow the main database for portfolio deployment
+!ecommerce.duckdb
+
 # Data files
 data/raw/*.csv
 data/raw/*.parquet
@@ -74,6 +77,8 @@ Thumbs.db
 
 # Secrets
 credentials.json
+.streamlit/secrets.toml
+kaggle.json
 
 # Temporary files
 *.tmp
