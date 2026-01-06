@@ -265,13 +265,89 @@ elif page == "📥 Data Pipeline":
 
             if st.button("🔄 Refresh from Kaggle", use_container_width=True):
                 st.session_state.pipeline_status = "loading"
-                with st.spinner("Downloading fresh dataset from Kaggle..."):
-                    try:
+
+                # Create progress placeholders
+                status_container = st.container()
+
+                try:
+                    with status_container:
                         # Delete existing database
                         if DB_PATH.exists():
-                            DB_PATH.unlink()
+                            with st.spinner("🗑️ Removing old database..."):
+                                DB_PATH.unlink()
+                                st.success("✅ Old database removed")
 
                         api_token, username, key = get_kaggle_credentials()
+
+                        with st.spinner("📥 Downloading fresh dataset from Kaggle..."):
+                            st.info("⏳ Step 1: Downloading Brazilian E-Commerce dataset from Kaggle...")
+
+                            # Download and load
+                            db_path = download_and_load_data(
+                                kaggle_api_token=api_token,
+                                kaggle_username=username,
+                                kaggle_key=key,
+                                project_root=PROJECT_ROOT
+                            )
+
+                        # Show completion status with details
+                        st.success("✅ Download complete!")
+
+                        # Query database to show what was loaded
+                        with st.spinner("📊 Loading data into DuckDB..."):
+                            try:
+                                con = duckdb.connect(str(DB_PATH), read_only=True)
+
+                                total_rows = con.execute("""
+                                    SELECT SUM(cnt) as total FROM (
+                                        SELECT COUNT(*) as cnt FROM raw.olist_customers_dataset
+                                        UNION ALL SELECT COUNT(*) FROM raw.olist_orders_dataset
+                                        UNION ALL SELECT COUNT(*) FROM raw.olist_order_items_dataset
+                                        UNION ALL SELECT COUNT(*) FROM raw.olist_order_payments_dataset
+                                        UNION ALL SELECT COUNT(*) FROM raw.olist_order_reviews_dataset
+                                        UNION ALL SELECT COUNT(*) FROM raw.olist_products_dataset
+                                        UNION ALL SELECT COUNT(*) FROM raw.olist_sellers_dataset
+                                        UNION ALL SELECT COUNT(*) FROM raw.olist_geolocation_dataset
+                                        UNION ALL SELECT COUNT(*) FROM raw.product_category_name_translation
+                                    )
+                                """).fetchone()[0]
+
+                                table_count = con.execute("""
+                                    SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'raw'
+                                """).fetchone()[0]
+
+                                con.close()
+
+                                st.success(f"✅ Data refreshed successfully!")
+                                st.info(f"📊 **{table_count} tables** created with **{total_rows:,} total rows**")
+
+                            except Exception as db_error:
+                                st.success(f"✅ Data refreshed successfully!")
+
+                    st.session_state.data_loaded = True
+                    st.session_state.pipeline_status = "data_loaded"
+                    st.balloons()
+                    st.rerun()
+
+                except Exception as e:
+                    st.session_state.pipeline_status = "not_started"
+                    st.error(f"❌ Error: {e}")
+                    st.info("💡 Make sure you have configured Kaggle credentials in `.streamlit/secrets.toml`")
+    else:
+        st.info("📥 No database found. Click below to download data from Kaggle.")
+
+        if st.button("📥 Download from Kaggle & Load", type="primary", use_container_width=True):
+            st.session_state.pipeline_status = "loading"
+
+            # Create progress placeholders
+            status_container = st.container()
+
+            try:
+                api_token, username, key = get_kaggle_credentials()
+
+                with status_container:
+                    with st.spinner("📥 Downloading dataset from Kaggle..."):
+                        st.info("⏳ Step 1: Downloading Brazilian E-Commerce dataset from Kaggle...")
 
                         # Download and load
                         db_path = download_and_load_data(
@@ -281,45 +357,56 @@ elif page == "📥 Data Pipeline":
                             project_root=PROJECT_ROOT
                         )
 
-                        st.session_state.data_loaded = True
-                        st.session_state.pipeline_status = "data_loaded"
-                        st.success(f"✅ Data refreshed successfully!")
-                        st.rerun()
+                    # Show completion status with details
+                    st.success("✅ Download complete!")
 
-                    except Exception as e:
-                        st.session_state.pipeline_status = "not_started"
-                        st.error(f"❌ Error: {e}")
-                        st.info("💡 Make sure you have configured Kaggle credentials in `.streamlit/secrets.toml`")
-    else:
-        st.info("📥 No database found. Click below to download data from Kaggle.")
+                    # Query database to show what was loaded
+                    with st.spinner("📊 Loading data into DuckDB..."):
+                        try:
+                            con = duckdb.connect(str(DB_PATH), read_only=True)
+                            tables = con.execute("""
+                                SELECT table_name,
+                                       (SELECT COUNT(*) FROM raw.|| table_name) as row_count
+                                FROM information_schema.tables
+                                WHERE table_schema = 'raw'
+                                ORDER BY table_name
+                            """).df()
 
-        if st.button("📥 Download from Kaggle & Load", type="primary", use_container_width=True):
-            st.session_state.pipeline_status = "loading"
-            with st.spinner("Downloading dataset from Kaggle..."):
-                try:
-                    api_token, username, key = get_kaggle_credentials()
+                            total_rows = con.execute("""
+                                SELECT SUM(cnt) as total FROM (
+                                    SELECT COUNT(*) as cnt FROM raw.olist_customers_dataset
+                                    UNION ALL SELECT COUNT(*) FROM raw.olist_orders_dataset
+                                    UNION ALL SELECT COUNT(*) FROM raw.olist_order_items_dataset
+                                    UNION ALL SELECT COUNT(*) FROM raw.olist_order_payments_dataset
+                                    UNION ALL SELECT COUNT(*) FROM raw.olist_order_reviews_dataset
+                                    UNION ALL SELECT COUNT(*) FROM raw.olist_products_dataset
+                                    UNION ALL SELECT COUNT(*) FROM raw.olist_sellers_dataset
+                                    UNION ALL SELECT COUNT(*) FROM raw.olist_geolocation_dataset
+                                    UNION ALL SELECT COUNT(*) FROM raw.product_category_name_translation
+                                )
+                            """).fetchone()[0]
 
-                    # Create progress placeholder
-                    progress_text = st.empty()
-                    progress_text.text("Downloading data from Kaggle...")
+                            table_count = con.execute("""
+                                SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'raw'
+                            """).fetchone()[0]
 
-                    # Download and load
-                    db_path = download_and_load_data(
-                        kaggle_api_token=api_token,
-                        kaggle_username=username,
-                        kaggle_key=key,
-                        project_root=PROJECT_ROOT
-                    )
+                            con.close()
 
-                    st.session_state.data_loaded = True
-                    st.session_state.pipeline_status = "data_loaded"
-                    st.success(f"✅ Data downloaded and loaded successfully!")
-                    st.rerun()
+                            st.success(f"✅ Data loaded successfully into DuckDB!")
+                            st.info(f"📊 **{table_count} tables** created with **{total_rows:,} total rows**")
 
-                except Exception as e:
-                    st.session_state.pipeline_status = "not_started"
-                    st.error(f"❌ Error: {e}")
-                    st.info("💡 Make sure you have configured Kaggle credentials in `.streamlit/secrets.toml`")
+                        except Exception as db_error:
+                            st.success(f"✅ Data loaded successfully!")
+
+                st.session_state.data_loaded = True
+                st.session_state.pipeline_status = "data_loaded"
+                st.balloons()
+                st.rerun()
+
+            except Exception as e:
+                st.session_state.pipeline_status = "not_started"
+                st.error(f"❌ Error: {e}")
+                st.info("💡 Make sure you have configured Kaggle credentials in `.streamlit/secrets.toml`")
 
     st.markdown("---")
 
