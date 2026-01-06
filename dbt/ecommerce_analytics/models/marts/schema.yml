@@ -1,0 +1,151 @@
+version: 2
+
+models:
+  - name: dim_customers
+    description: Customer dimension with RFM segmentation and lifetime metrics
+    columns:
+      - name: customer_key
+        description: Primary key - unique customer identifier
+        tests:
+          - unique
+          - not_null
+
+      - name: customer_segment
+        description: RFM-based customer segment (Champions, At Risk, etc.)
+        tests:
+          - accepted_values:
+              values:
+                - 'Champions'
+                - 'Loyal Customers'
+                - 'Potential Loyalists'
+                - 'Recent Customers'
+                - 'Promising'
+                - 'Need Attention'
+                - 'At Risk'
+                - 'Cannot Lose Them'
+                - 'Hibernating'
+                - 'Lost'
+
+      - name: customer_tier
+        description: Customer value tier (High, Medium, Low)
+        tests:
+          - accepted_values:
+              values: ['High Value', 'Medium Value', 'Low Value']
+
+      - name: total_revenue
+        description: Lifetime revenue from customer (R$)
+
+  - name: dim_products
+    description: Product dimension with performance metrics
+    columns:
+      - name: product_key
+        description: Primary key - unique product identifier
+        tests:
+          - unique
+          - not_null
+
+      - name: category_english
+        description: Product category in English
+        tests:
+          - not_null
+
+      - name: sales_tier
+        description: Product sales performance tier
+        tests:
+          - accepted_values:
+              values: ['Top Seller', 'Good Seller', 'Low Seller', 'No Sales']
+
+  - name: dim_sellers
+    description: Seller dimension with performance and delivery metrics
+    columns:
+      - name: seller_key
+        description: Primary key - unique seller identifier
+        tests:
+          - unique
+          - not_null
+
+      - name: performance_tier
+        description: Seller performance tier based on revenue
+        tests:
+          - accepted_values:
+              values: ['Top Seller', 'High Performer', 'Medium Performer', 'Low Performer', 'No Sales']
+
+  - name: fct_orders
+    description: Order fact table (grain = one order)
+    columns:
+      - name: order_key
+        description: Primary key - unique order identifier
+        tests:
+          - unique
+          - not_null
+
+      - name: customer_key
+        description: Foreign key to dim_customers
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_customers')
+              field: customer_key
+
+      - name: order_status
+        description: Current status of order
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['delivered', 'shipped', 'canceled', 'unavailable', 'invoiced', 'processing', 'created', 'approved']
+
+      - name: order_value
+        description: Total order value including freight (R$)
+        tests:
+          - not_null
+
+      - name: purchased_at
+        description: Timestamp when order was placed
+        tests:
+          - not_null
+
+  - name: fct_order_items
+    description: Order items fact table (grain = one line item)
+    columns:
+      - name: order_item_key
+        description: Primary key - composite of order_id and item_id
+        tests:
+          - unique
+          - not_null
+
+      - name: order_key
+        description: Foreign key to fct_orders
+        tests:
+          - not_null
+          - relationships:
+              to: ref('fct_orders')
+              field: order_key
+
+      - name: customer_key
+        description: Foreign key to dim_customers
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_customers')
+              field: customer_key
+
+      - name: product_key
+        description: Foreign key to dim_products
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_products')
+              field: product_key
+
+      - name: seller_key
+        description: Foreign key to dim_sellers
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_sellers')
+              field: seller_key
+
+      - name: total_price
+        description: Item price + freight (R$)
+        tests:
+          - not_null
